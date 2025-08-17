@@ -1,0 +1,56 @@
+# 워크플로우 이름
+name: Generate Media List JSON
+
+# main 브랜치에 push가 발생할 때마다 실행
+on:
+  push:
+    branches:
+      - main
+  # 수동 실행도 가능하도록 workflow_dispatch 추가
+  workflow_dispatch:
+
+# 작업 정의
+jobs:
+  build-and-deploy:
+    # ubuntu 최신 버전에서 실행
+    runs-on: ubuntu-latest
+
+    # 단계별 실행 내용
+    steps:
+      # 1. 저장소 코드 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. PHP 환경 설정 (shivammathur/setup-php 사용)
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          # cURL 확장이 필요하므로 활성화
+          extensions: curl 
+          # JIT 비활성화 (성능 향상)
+          jit: false
+
+      # 3. PHP 스크립트 실행하여 media-list.json 생성
+      - name: Generate JSON file
+        run: php generate-json.php
+
+      # 4. 생성된 JSON 파일을 GitHub Pages로 배포
+      # peaceiris/actions-gh-pages Action을 사용하면 매우 편리합니다.
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          # GitHub Actions가 자동으로 생성하는 토큰을 사용합니다.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # 배포할 브랜치를 'gh-pages'로 지정합니다.
+          publish_branch: gh-pages
+          # 배포할 파일/디렉토리를 지정합니다. 여기서는 루트 디렉토리를 의미합니다.
+          publish_dir: .
+          # 배포할 파일 목록을 명시하여 다른 파일은 제외시킵니다.
+          allow_empty_commit: false
+          keep_files: false
+          # 배포 커밋을 할 유저 정보
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          # 커밋 메시지
+          commit_message: 'Deploy generated media-list.json to gh-pages'
