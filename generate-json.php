@@ -9,7 +9,8 @@
 $owner = 'xtx9';
 $repo = 'xtx9-media-storage';
 $rootPath = 'imgs';
-$outputFile = 'xtx9-media-storage-media.json'; // <<< 수정된 부분
+$outputFile = 'xtx9-media-storage-media.json';
+$cdnBaseUrl = 'https://xtx9.pages.dev'; // <<< 최종 이미지 URL을 위한 베이스 주소
 // --- 설정 끝 ---
 
 /**
@@ -20,9 +21,10 @@ $outputFile = 'xtx9-media-storage-media.json'; // <<< 수정된 부분
  */
 function fetchDirectoryTree(string $path): ?array
 {
-    global $owner, $repo;
+    global $owner, $repo, $cdnBaseUrl; // <<< $cdnBaseUrl 전역 변수 사용
     $apiUrl = "https://api.github.com/repos/{$owner}/{$repo}/contents/{$path}";
 
+    // (cURL 로직은 이전과 동일하므로 생략)
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $apiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -31,14 +33,11 @@ function fetchDirectoryTree(string $path): ?array
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    if ($httpCode !== 200) {
-        error_log("API Error for path '{$path}': HTTP {$httpCode} - {$response}");
+    if ($httpCode !== 200) { /* ... 오류 처리 ... */
         return null;
     }
-
     $items = json_decode($response, true);
-    if ($items === null) {
-        error_log("JSON Decode Error for path '{$path}'");
+    if ($items === null) { /* ... 오류 처리 ... */
         return null;
     }
 
@@ -48,15 +47,14 @@ function fetchDirectoryTree(string $path): ?array
         $fileNameNoExt = $pathInfo['filename'];
         $extension = $pathInfo['extension'] ?? '';
 
-        // 파일 타입 결정 로직
-        $type = 'file'; // 기본값
+        $type = 'file';
         if ($item['type'] === 'dir') {
             $type = 'folder';
         } elseif (in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'])) {
             $type = 'img';
         }
 
-        // 각 노드(파일/폴더)에 대한 정보 구성
+        // 각 노드에 대한 정보 구성
         $node = [
             'name'         => $fileNameNoExt,
             'ext'          => $extension,
@@ -64,7 +62,10 @@ function fetchDirectoryTree(string $path): ?array
             'type'         => $type,
             'path'         => $item['path'],
             'size'         => $item['size'],
-            'url'          => $item['html_url'],
+            // <<< [수정] 필드명 변경: url -> githubUrl
+            'githubUrl'    => $item['html_url'],
+            // <<< [추가] 실제 사용될 최종 CDN URL
+            'cdnUrl'       => ($type !== 'folder') ? "{$cdnBaseUrl}/{$item['path']}" : null,
             'Resolution'   => null,
             'lastModified' => null,
         ];
@@ -79,20 +80,16 @@ function fetchDirectoryTree(string $path): ?array
     return $children;
 }
 
+// (JSON 생성 및 저장 로직은 이전과 동일)
 echo "Generating media list from '{$rootPath}' directory...\n";
-
 $treeChildren = fetchDirectoryTree($rootPath);
-
 $rootNode = [
     'name' => $rootPath,
     'type' => 'folder',
     'path' => $rootPath,
     'children' => $treeChildren
 ];
-
 $finalJson = ['tree' => $rootNode];
-
 file_put_contents($outputFile, json_encode($finalJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
 echo "Successfully generated {$outputFile}\n";
 exit(0);

@@ -1,43 +1,51 @@
-# 워크플로우 이름
-name: Generate Media List JSON
+name: Generate Media List JSON (Incremental Update)
 
-# main 브랜치에 push가 발생할 때마다 실행
 on:
   push:
     branches:
       - main
-  # 수동 실행도 가능하도록 workflow_dispatch 추가
   workflow_dispatch:
 
-# 작업 정의
 jobs:
   build-and-deploy:
-    # ubuntu 최신 버전에서 실행
     runs-on: ubuntu-latest
-
-    # [수정] 이 블록을 추가하여 gh-pages 브랜치에 쓸 수 있는 권한을 부여합니다.
     permissions:
       contents: write
 
-    # 단계별 실행 내용
     steps:
-      # 1. 저장소 코드 체크아웃
       - name: Checkout repository
+        # 전체 히스토리를 가져와야 diff가 가능합니다.
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      # 2. PHP 환경 설정 (shivammathur/setup-php 사용)
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
-          # cURL 확장이 필요하므로 활성화
           extensions: curl
-          # [수정] 지원하지 않는 'jit' 옵션을 삭제합니다.
-          # jit: false <-- 이 줄을 삭제했습니다.
 
-      # 3. PHP 스크립트 실행하여 media-list.json 생성
-      - name: Generate JSON file
-        run: php generate-json.php
+      # 1. 이전 버전의 JSON 파일을 gh-pages 브랜치에서 다운로드 (캐시 역할)
+      - name: Download previous JSON
+        # || true를 붙여 파일이 없는 첫 실행 시 오류가 나지 않도록 합니다.
+        run: |
+          curl -s -f -o old-media-list.json "https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/xtx9-media-storage-media.json" || true
+      
+      # 2. 이전 커밋과 현재 커밋 사이의 변경된 파일 목록 생성
+      - name: Get changed files
+        # workflow_dispatch로 수동 실행 시에는 전체를 다시 생성하도록 합니다.
+        if: github.event_name == 'push'
+        run: |
+          git diff --name-status ${{ github.event.before }} ${{ github.event.after }} | grep '^imgs/' > changes.txt
+          echo "Found changes:"
+          cat changes.txt
+      - name: Handle manual trigger (full rebuild)
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "Manual trigger detected, forcing full rebuild." > changes.txt
+
+      # 3. 변경사항을 기반으로 JSON 업데이트
+      - name: Update JSON based on changes
+        run: php update-json.php changes.txt old-media-list.json
 
       # 4. 생성된 JSON 파일을 GitHub Pages로 배포
       - name: Deploy to GitHub Pages
@@ -45,12 +53,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          # media-list.json 파일만 배포하도록 수정하여 더 안전하게 만듭니다.
           publish_dir: .
-          # force_orphan: true 옵션을 추가하여 매번 깨끗한 브랜치에서 시작하도록 합니다.
+          # 새 JSON 파일만 배포하도록 명시
+          file_pattern: xtx9-media-storage-media.json
           force_orphan: true
-          # 배포 커밋을 할 유저 정보
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
-          # 커밋 메시지
-          commit_message: 'Deploy generated media-list.json'
+          commit_message: 'Update media-list.json'
