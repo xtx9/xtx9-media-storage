@@ -1,0 +1,5 @@
+.ssh/
+.vscode/
+.script/
+doc/
+*.code-workspace
