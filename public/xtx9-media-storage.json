@@ -1,0 +1,56 @@
+{
+  "tree": {
+    "name": "imgs",
+    "path": "imgs",
+    "type": "folder",
+    "children": [
+      {
+        "name": "xtx9",
+        "path": "imgs/xtx9",
+        "type": "folder",
+        "children": [
+          {
+            "name": "Gerald_and_Betty_Ford_meet_with_Deng_Xiaoping,_1975_A7598-20A.jpg",
+            "path": "imgs/xtx9/Gerald_and_Betty_Ford_meet_with_Deng_Xiaoping,_1975_A7598-20A.jpg",
+            "type": "file"
+          },
+          {
+            "name": "Gerald_and_Betty_Ford_meet_with_Deng_Xiaoping,_1975_A7598-20A.thumb.jpg",
+            "path": "imgs/xtx9/Gerald_and_Betty_Ford_meet_with_Deng_Xiaoping,_1975_A7598-20A.thumb.jpg",
+            "type": "file"
+          },
+          {
+            "name": "leon-trotsky-1.png",
+            "path": "imgs/xtx9/leon-trotsky-1.png",
+            "type": "file"
+          },
+          {
+            "name": "leon-trotsky-1.thumb.jpg",
+            "path": "imgs/xtx9/leon-trotsky-1.thumb.jpg",
+            "type": "file"
+          },
+          {
+            "name": "노동자 계급.jpg",
+            "path": "imgs/xtx9/노동자 계급.jpg",
+            "type": "file"
+          },
+          {
+            "name": "노동자 계급.thumb.jpg",
+            "path": "imgs/xtx9/노동자 계급.thumb.jpg",
+            "type": "file"
+          }
+        ]
+      },
+      {
+        "name": "누렁이 흰둥이 어릴때.mp4[2024-11-20 13-04-36.108].jpg",
+        "path": "imgs/누렁이 흰둥이 어릴때.mp4[2024-11-20 13-04-36.108].jpg",
+        "type": "file"
+      },
+      {
+        "name": "누렁이 흰둥이 어릴때.mp4[2024-11-20 13-04-36.108].thumb.jpg",
+        "path": "imgs/누렁이 흰둥이 어릴때.mp4[2024-11-20 13-04-36.108].thumb.jpg",
+        "type": "file"
+      }
+    ]
+  }
+}
