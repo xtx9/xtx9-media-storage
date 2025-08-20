@@ -16,7 +16,7 @@ jobs:
           curl -L \
             -X POST \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.CROSS_REPO_PAT }}" \
+            -H "Authorization: Bearer ${{ secrets.ACTION_REPO_DISPATCH_PAT }}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/xtx9/action/actions/workflows/xtx9-media-storage-init.yml/dispatches \
             -d '{"ref":"main"}' # action 리포지토리의 main 브랜치에 있는 워크플로우를 실행
